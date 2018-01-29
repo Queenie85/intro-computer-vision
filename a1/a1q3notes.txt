@@ -1,0 +1,63 @@
+=== Notes on A1Q3 ===
+
+MATLAB code to read in the number templates:
+
+---
+
+function [templates, dimensions] = readInTemplates
+
+inputFolderRoot = 'DIGITS';
+idx = 1 ;
+for( s = 1 : 3 )
+    inputFolder = fullfile( inputFolderRoot , ['SCALE_', num2str(s)]) ;
+    
+    for( i = 0 : 9 )
+        templateFile = [ num2str(i), '.png'];
+        
+        templates{idx} = imread( fullfile( inputFolder , templateFile ) ) ;
+        dimensions(idx).height = size( templates{idx},1) ;
+        dimensions(idx).width  = size( templates{idx},2) ;
+        
+        idx = idx + 1 ;
+    end
+end
+
+---
+
+inputFolderRoot -> the root folder where our three files of digits are
+idx -> index variable
+
+for( s = 1 : 3 )
+    inputFolder = fullfile( inputFolderRoot , ['SCALE_', num2str(s)]) ;
+
+s will take on 1, 2, 3
+here, inputFolder will hold fullfile('DIGITS', ['SCALE_', s])
+where s is a number
+so for each s, inputFolder is SCALE_s
+
+  for( i = 0 : 9 )
+        templateFile = [ num2str(i), '.png'];
+        
+        templates{idx} = imread( fullfile( inputFolder , templateFile ) ) ;
+        dimensions(idx).height = size( templates{idx},1) ;
+        dimensions(idx).width  = size( templates{idx},2) ;
+        
+        idx = idx + 1 ;
+  end
+
+here, i will take on a digit value
+templateFile will hold the corresponding image filename
+templates{idx} will hold the corresponding image
+dimensions(idx).height and .width will take the size of templates{idx}
+idx will incremenet to become the next image
+
+our functon readInTemplates takes no arguments, but outputs:
+[templates, dimensions]
+an array of templates and associated dimensions
+each template{idx} indexes into a cell-array in template that stores the image
+we also index to dimensions(idx) which is a matrix
+
+
+
+- compute normalized correlation with normxcorr2 of thermometer.png with each template
+- store the image in a M x N x 30 array called corrArray

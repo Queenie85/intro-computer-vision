@@ -1,0 +1,93 @@
+CSC420 A4 PROGRESS
+
+_ Q0 : READ THEORY
+	_ multiple view geometry : stereo vision
+	_ object detection slides
+
+_ Q1 [3.5]
+	_ write down the given commands and matrices provided
+	_ watch the video of a simpler model
+	_ a :
+		_ information of the robot's world
+		_ what will the robot encounter?
+		_ what data will the robot need for training?
+		_ include in a diagram
+	_ b :
+		_ flow chart:
+			_ main processing pipeline the robot will use
+			_ reference algorithms from the course itself (e.g. cannyEdgeDetector)
+			_ reference actions taken (e.g. moveToLocation)
+	_ c :
+		_ write the PSEUDO-CODE FOR YOUR ROBOT
+			_ reference algorithms from course by name
+			_ include relevant arguments
+			_ marked on completeness and ingenuity
+
+_ Q2 [8.5]
+	
+	_ setup: 
+		_ stereo results given in ZIP file. download and run if necessary, results already present
+		_ provided code for obj detector called DEFORMABLE PART MODEL (DPM)
+			_ compile the code -> run MATLAB inside code/dpm directory
+			_ add all subdirectories to matlab path
+			_ if error : comment out the given stuff
+			_ NOTE: DPM IS A POWERFUL OBJECT DETECTOR, CAN BE USED FOR OTHER STUFF
+		_ open globals.m and set paths for data to use helper functions
+		_ analyze getData function
+		_ analyze train and test folders
+			_ only need to process first three images in test.txt file
+			_ can use: data = getData([], "test", "list"); ids = data.ids(1:3);
+		_ position yourself in code folder, type addpath(genpath(pwd)) before running any code
+
+	_ a: depth computation [*]
+		_ compute depth for each image
+			_ n x m matrix
+			_ depth(i,j) = depth of pixel at (i,j)
+			_ IN LATEX : include visualization of depth matrices
+			_ need camera parameters:
+				_ can find via getData using "calib" option
+
+	_ b: DPM detectors
+		_ FOR ALL test images, run DPM detectors for car, person, cyclist
+			_ demo_car shows how to run detector on image for car
+		_ store detections (var DS) in results folder
+		_ add a subroutine to getData that loads detections for each image
+		_ store which class each detection belongs to
+
+	_ c: Detection visualization
+		_ IN LATEX:
+			_ visualization of first three images with all car, person, cyclist detections
+				_ CAR -> red rect
+				_ PERSON -> blue rect
+				_ CYCLIST -> cyan rect
+				_ each rect -> write label (matlab: function text)
+
+	_ d: center of mass/3D location computation [*]
+		_ compute 3d location center of mass of each detected object
+			_ need to use depth information inside each detection's bounding box
+
+	_ e: segmentation [*]
+		_ for each detection, we have computed the centre of mass 3d location of each object
+			_ find all pixels inside each bounding box that are at most 3 METERS AWAY from the computed 3D location
+		_ create a segmentation image
+			_ same number of cols, rows as original RGB image
+			_ INIT matrix with all zeros
+			_ for the i-th row in ds (the i-th detectin):
+				_ assign value i to all pixels found belonging to detection i
+			_ IN LATEX : include visualization of first three images of segmentation 
+
+	_ f: textual description [*]
+		_ generate at least a sentence about how many cars
+		_ generate at least a sentence about how many pedestrians
+		_ generate at least a sentence about how many cyclists
+		_ generate a sentence about farthest an closest object
+		_ other sentences
+		_ explain what code is supposed to do
+
+
+_ BONUS : Q3 [3.0]
+	_ pseudocode a
+	_ pseudocode b
+
+
+

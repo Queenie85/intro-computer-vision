@@ -1,0 +1,2 @@
+1. initialize tracks as an empty list
+2. 

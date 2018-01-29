@@ -1,0 +1,158 @@
+1. analyze if net has ball trapped
+2. move to net
+3. retrieve ball
+4. move towards server
+5. feed ball to server
+6. return to initial position and repeat
+
+1a. INITIALIZATIONS:
+	1. scoring and timing mechanism to keep track of hitting and service
+	2. DPM trained model on three objects: player1, player2, ball
+	3. initialize service player 
+
+1b. STEREO CAMERA INFORMATION:
+	1. using the K[R|t], while viewing update scene every 5 ms and recalculate 3D space from 2D image 
+
+2. SCORE TRACKING:
+	1. use canny edge detector on court lines
+	2. if ball goes beyond base line, score has been made
+	3. keep track of service player in this way
+	4. if ball goes past side line, move to step 3
+
+3. ANALYZE NET IF BALL IS TRAPPED
+	1. on the side net, detect location of ball using pretrained DPM object recognition
+	2. if ball not found or detection error (e.g. multiple balls), move to step 4b.
+	3. if ball located, move to step 4a.
+
+4a. RETRIEVE BALL
+	1. move towards net and ball location
+	2. pick up ball
+	3. turn back to court, identify server using DPM object recognition 
+	4. Give ball to server
+
+4b. RETRIEVE BALL (2)
+	1. move towards pre-determined extra ball storage bucket
+	2. retrieve ball
+	3. turn back to court, identify server using DPM object recognition
+	4. Give ball to server
+
+== MAIN PROCESSING PIPELINE ==
+
+functions in use:
+
+faceDirection
+moveToLocation
+grabObjectAtLocation
+victoryDanceAtLocation
+
+
+Initialization:
+
+initialPosition = [0 0 0];
+extraTennisBallsBucket % an input that denotes the location of where to find extra tennis balls if an error happens or the ball is loss, in world coordinates
+refereeLoc % an input that denotes the world coordinates location of where the referee is
+scoreP1 = 0
+scoreP2 = 0
+time = 0
+sideLineLocation % an array input in world coordinates for the out of bounds line with (0,0,0) as the initial position of the robot, 
+sideNetLocation % an array input in world coordinates for the location of the out of bounds net with (0,0,0) as the initial position of the robot
+
+DPMObject = trainDeformablePartModel(P1train, P2train, ballTrain)
+
+service = input("Winner of coin toss, 0 if P1, 1 if P2")
+calibMat = K (given)
+t = cameraDifference % built-in based on difference in camera eyes for the robot stereo vision
+
+--- Panorama Helper Function Creation to stitch a 3D Scene: ---
+
+imgArray;
+SIFTArray;
+rotationArray;
+
+% taking a photo every 10 degrees
+
+for i = 1 to 36:
+	im = takePhoto() 
+	imgArray(i) = im
+	rotationArray(i) = faceDirection(rotate(10,right)) % rotate is a helper function that outputs the (X,Y,Z) coordinates relative to (0,0,0) of staying in place and rotating a certain number of degrees
+	SIFTArray(i) = sift(im)
+
+% panorama stitching using RANSAC
+
+panoramaBuildArray = imgArray(1);
+3DStitch = computeWorldCoordinates(imgArray(1),K,rotationArray(i),t) % returns X Y Z from image x y with depth Z from K R t stereo information
+
+for i = 2 to 36:
+	featMatches = RANSAC(SIFTArray(i-1), SIFTArray(i)) % use RANSAC to get matched SIFT features
+	stitch(panoramaBuildArray,imgArray(i),featMatches) % stitch the next image to the current built up panorama image 
+
+return panoramaCapture
+
+---
+
+--- Service Switch Function ---
+
+if service switches, just switch the service variable to the other player
+
+---
+
+--- Return to Origin Function ---
+
+	faceDirection(0,0,0)
+	moveToLocation(0,0,0)
+
+---
+
+pano;
+3Dworld;
+
+every second update: 
+	serviceSwitch()
+	pano = panoramaCapture()
+	3Dworld = computeWorldCoordinates(pano,K,rotationArray,t) % returns X Y Z from image x y with depth Z from K R t stereo information
+	[x,y] = DPMObject.detect(pano,ball)
+	3DBallLoc = computeWorldCoordinates([x,y],K,0,t)
+	if 3DBallLoc is past the sideLineLocation:
+		faceDirection(sideNetLocation)
+		im = takePhoto()
+		currentOrientation = self.rotate;
+		detections = DPMObject.detect(im,ball) % detecting where the ball is on the net
+		if size(detections,1) != 1:
+			faceDirection(extraTennisBallBucket)
+			moveToLocation(extraTennisBallBucket)
+			grabObjectAtLocation(extraTennisBallBucket)
+		else:
+			NetBallLoc = computeWorldCoordinates([x,y],K,currentOrientation,t)
+			moveToLocation(NetBallLoc)
+			grabObjectAtLocation(NetBallLoc)
+		pano = panoramaCapture()
+		servDetector = DPMObject.detect(pano,service)
+		if servDetector != 1:
+			faceDirection(refereeLoc)
+			moveToLocation(refereeLoc)
+			giveObject(refereeLoc)
+		else:
+			3DServerLoc = computeWorldCoordinates(servDetector,K,currentOrientation,t)
+			faceDirection(3DServerLoc)
+			moveToLocation(3DServerLoc)
+			giveObject(3DServerLoc)
+		returnToOrigin()
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
